@@ -1,0 +1,33 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+// A sales report on the command line. Run: php bin/report [path/to/orders.csv]
+
+require __DIR__.'/../vendor/autoload.php';
+
+use App\SalesReport;
+use PyHP\Py;
+
+$py = Py::session();
+$report = new SalesReport($py, $argv[1] ?? __DIR__.'/../data/orders.csv');
+
+printf("%d orders, %.2f USD in total\n\n", $report->orderCount(), $report->totalRevenue());
+
+echo "Revenue by city\n";
+foreach ($report->revenueByCity() as $city => $revenue) {
+    printf("  %-10s %9.2f\n", $city, $revenue);
+}
+
+echo "\nMonth     Orders   Revenue\n";
+foreach ($report->monthly() as $row) {
+    printf("  %s %6d %9.2f\n", $row['month'], $row['orders'], $row['revenue']);
+}
+
+echo "\nTop products (units)\n";
+foreach ($report->topProducts() as $product => $units) {
+    printf("  %-14s %3d\n", $product, $units);
+}
+
+$py->close();
